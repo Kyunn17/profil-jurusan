@@ -1,0 +1,17 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Mapel extends Model
+{
+    protected $table = 'mata_pelajaran';   // 🔥 INI KUNCINYA
+    protected $primaryKey = 'id_mapel';
+    public $timestamps = false;
+
+    protected $fillable = [
+        'nama_mapel',
+        'kategori'
+    ];
+}
