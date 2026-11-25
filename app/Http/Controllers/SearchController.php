@@ -38,7 +38,7 @@ class SearchController extends Controller
                     $results[] = [
                         'category' => 'Siswa',
                         'icon' => 'fas fa-user-graduate',
-                        'color' => '#38bdf8',
+                        'color' => '#15803d',
                         'title' => $s->nama,
                         'desc' => $s->nisn . ' - ' . ($s->kelas->nama_kelas ?? '-'),
                         'url' => route('siswa', ['cari' => $s->nama]),
@@ -56,7 +56,7 @@ class SearchController extends Controller
                     $results[] = [
                         'category' => 'Guru',
                         'icon' => 'fas fa-chalkboard-teacher',
-                        'color' => '#a78bfa',
+                        'color' => '#0d9488',
                         'title' => $g->nama,
                         'desc' => 'NIP: ' . ($g->nip ?? '-'),
                         'url' => route('guru', ['cari' => $g->nama]),
@@ -71,7 +71,7 @@ class SearchController extends Controller
                     $results[] = [
                         'category' => 'Mapel',
                         'icon' => 'fas fa-book',
-                        'color' => '#10b981',
+                        'color' => '#059669',
                         'title' => $m->nama_mapel,
                         'desc' => $m->kategori ?? 'Umum',
                         'url' => route('mapel', ['cari' => $m->nama_mapel]),
@@ -86,7 +86,7 @@ class SearchController extends Controller
                     $results[] = [
                         'category' => 'Kelas',
                         'icon' => 'fas fa-school',
-                        'color' => '#f59e0b',
+                        'color' => '#d97706',
                         'title' => $k->nama_kelas,
                         'desc' => $k->jurusan ?? '-',
                         'url' => route('kelas', ['cari' => $k->nama_kelas]),
@@ -103,7 +103,7 @@ class SearchController extends Controller
                     $results[] = [
                         'category' => 'Berita',
                         'icon' => 'fas fa-newspaper',
-                        'color' => '#ef4444',
+                        'color' => '#dc2626',
                         'title' => $b->judul,
                         'desc' => mb_substr(strip_tags($b->isi), 0, 40) . '...',
                         'url' => route('berita', ['cari' => $b->judul]),
@@ -122,7 +122,7 @@ class SearchController extends Controller
                         $results[] = [
                             'category' => 'User',
                             'icon' => 'fas fa-user-shield',
-                            'color' => '#ec4899',
+                            'color' => '#047857',
                             'title' => $u->name,
                             'desc' => 'Role: ' . ($u->role ?? 'User'),
                             'url' => route('pengguna', ['cari' => $u->name]),

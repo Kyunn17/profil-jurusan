@@ -2,33 +2,19 @@
 
 @section('title', 'Rekap Absensi')
 
-@push('styles')
-<style>
-    .card-hadir { border-top: 4px solid var(--success); }
-    .card-izin  { border-top: 4px solid var(--primary); }
-    .card-sakit { border-top: 4px solid var(--warning); }
-    .card-alpha { border-top: 4px solid var(--danger); }
-
-    .status-badge-lg {
-        padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 0.85rem;
-        display: inline-block; margin-bottom: 10px; text-transform: uppercase;
-    }
-</style>
-@endpush
-
 @section('content')
 <div class="page-header-actions">
     <div>
-        <h2 style="color: var(--danger); margin: 0; font-size: 2rem;">Log Absensi</h2>
-        <p style="color: var(--text-muted); margin: 5px 0 0;">Monitoring kehadiran siswa realtime.</p>
+        <h2 class="page-title">Log Absensi</h2>
+        <p class="page-subtitle">Monitoring kehadiran siswa secara realtime.</p>
     </div>
-    <div style="display: flex; gap: 10px;">
-        <a href="{{ route('export.preview', ['type' => 'absensi']) }}" class="btn" style="background: var(--success);">
+    <div class="header-btn-group">
+        <a href="{{ route('export.preview', ['type' => 'absensi']) }}" class="btn btn-outline">
             <i class="fas fa-file-csv"></i> Preview Export
         </a>
 
         @if(in_array(Auth::user()->role, ['admin', 'guru'], true))
-        <button id="toggleFormBtn" class="btn" style="background: var(--danger);">
+        <button id="toggleFormBtn" class="btn">
             <i class="fas fa-calendar-check"></i> Catat Kehadiran
         </button>
         @endif
@@ -36,8 +22,8 @@
 </div>
 
 @if(in_array(Auth::user()->role, ['admin', 'guru'], true))
-<div id="formWrapper" class="form-panel" style="display: {{ ($edit || $errors->any()) ? 'block' : 'none' }}; border-color: var(--danger);">
-    <h3 style="color: white; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 20px;">
+<div id="formWrapper" class="form-panel" style="display: {{ ($edit || $errors->any()) ? 'block' : 'none' }};">
+    <h3 class="form-panel-title">
         <i class="fas fa-user-clock"></i> {{ $edit ? 'Edit Data Absensi' : 'Input Absensi Baru' }}
     </h3>
 
@@ -45,10 +31,10 @@
         @csrf
         @if($edit) <input type="hidden" name="id_absensi" value="{{ $edit->id_absensi }}"> @endif
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div class="form-grid-2">
             <div>
                 <div class="form-group">
-                    <label style="color: var(--danger);">Siswa</label>
+                    <label>Siswa</label>
                     <select name="id_siswa" required>
                         <option value="">-- Pilih Siswa --</option>
                         @foreach($siswa as $s)
@@ -59,7 +45,7 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label style="color: var(--danger);">Kelas</label>
+                    <label>Kelas</label>
                     <select name="id_kelas" required>
                         <option value="">-- Pilih Kelas --</option>
                         @foreach($kelas as $k)
@@ -73,32 +59,32 @@
 
             <div>
                 <div class="form-group">
-                    <label style="color: var(--danger);">Tanggal</label>
+                    <label>Tanggal</label>
                     <input type="date" name="tanggal" value="{{ old('tanggal', $edit->tanggal ?? date('Y-m-d')) }}" required>
                 </div>
                 <div class="form-group">
-                    <label style="color: var(--danger);">Status Kehadiran</label>
+                    <label>Status Kehadiran</label>
                     <select name="status" required>
                         <option value="">-- Pilih Status --</option>
-                        <option value="hadir" {{ old('status', $edit->status ?? '') === 'hadir' ? 'selected' : '' }}>✅ Hadir</option>
-                        <option value="izin" {{ old('status', $edit->status ?? '') === 'izin' ? 'selected' : '' }}>📩 Izin</option>
-                        <option value="sakit" {{ old('status', $edit->status ?? '') === 'sakit' ? 'selected' : '' }}>💊 Sakit</option>
-                        <option value="alpha" {{ old('status', $edit->status ?? '') === 'alpha' ? 'selected' : '' }}>❌ Alpha</option>
+                        <option value="hadir" {{ old('status', $edit->status ?? '') === 'hadir' ? 'selected' : '' }}>Hadir</option>
+                        <option value="izin" {{ old('status', $edit->status ?? '') === 'izin' ? 'selected' : '' }}>Izin</option>
+                        <option value="sakit" {{ old('status', $edit->status ?? '') === 'sakit' ? 'selected' : '' }}>Sakit</option>
+                        <option value="alpha" {{ old('status', $edit->status ?? '') === 'alpha' ? 'selected' : '' }}>Alpha</option>
                     </select>
                 </div>
             </div>
         </div>
 
-        <div style="margin-top: 20px; text-align: right;">
-            <button type="button" id="cancelBtn" class="btn btn-secondary" style="margin-right: 10px;">Batal</button>
-            <button type="submit" class="btn" style="background: var(--danger);">Simpan Data</button>
+        <div class="form-actions">
+            <button type="button" id="cancelBtn" class="btn btn-secondary">Batal</button>
+            <button type="submit" class="btn"><i class="fas fa-save"></i> Simpan Data</button>
         </div>
     </form>
 </div>
 @endif
 
 <div class="student-grid">
-    @foreach($absensi as $a)
+    @forelse($absensi as $a)
     @php
         if ($a->status === 'hadir') {
             $statusClass = 'card-hadir'; $statusLabel = 'HADIR'; $statusColor = 'status-hadir';
@@ -112,12 +98,12 @@
     @endphp
 
     <div class="student-card {{ $statusClass }}">
-        <div style="position: absolute; top: 15px; right: 15px; font-size: 0.8rem; color: var(--text-muted);">
+        <div style="position: absolute; top: 15px; right: 15px; font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">
             <i class="far fa-calendar-alt"></i> {{ \Carbon\Carbon::parse($a->tanggal)->format('d M') }}
         </div>
 
-        <img src="https://ui-avatars.com/api/?name={{ urlencode($a->siswa->nama ?? 'X') }}&background=0f172a&color=fff"
-             class="student-avatar" style="border-color: #334155;">
+        <img src="https://ui-avatars.com/api/?name={{ urlencode($a->siswa->nama ?? 'X') }}&background=dcfce7&color=15803d&bold=true"
+             class="student-avatar" alt="{{ $a->siswa->nama ?? 'Siswa' }}">
 
         <h3 class="student-name">{{ $a->siswa->nama ?? 'Siswa Dihapus' }}</h3>
 
@@ -126,12 +112,12 @@
         </span>
 
         <div class="student-details" style="justify-content: space-around;">
-            <span title="Kelas"><i class="fas fa-users"></i> {{ $a->kelas->nama_kelas ?? '-' }}</span>
-            <span title="NISN"><i class="fas fa-id-card"></i> {{ $a->siswa->nisn ?? '-' }}</span>
+            <span title="Kelas"><i class="fas fa-users" style="color: var(--primary);"></i> {{ $a->kelas->nama_kelas ?? '-' }}</span>
+            <span title="NISN"><i class="fas fa-id-card" style="color: var(--teal);"></i> {{ $a->siswa->nisn ?? '-' }}</span>
         </div>
 
         @if(in_array(Auth::user()->role, ['admin', 'guru'], true))
-        <div class="card-actions" style="margin-top: 15px;">
+        <div class="card-actions">
             <a href="{{ route('absensi', ['edit' => $a->id_absensi]) }}" class="btn-icon btn-edit" title="Edit">
                 <i class="fas fa-pen"></i>
             </a>
@@ -139,12 +125,18 @@
                     data-url="{{ route('absensi.hapus', $a->id_absensi) }}"
                     data-name="{{ $a->siswa->nama ?? 'Siswa ini' }}"
                     onclick="openDeleteModal(this)"
-                    class="btn-icon btn-delete" style="border:none;" title="Hapus">
+                    class="btn-icon btn-delete" title="Hapus">
                 <i class="fas fa-trash-can"></i>
             </button>
         </div>
         @endif
     </div>
-    @endforeach
+    @empty
+    <div class="empty-state">
+        <i class="fas fa-calendar-check"></i>
+        <strong>Belum ada catatan absensi.</strong>
+        <p style="margin: 6px 0 0;">Data kehadiran siswa akan tampil di sini.</p>
+    </div>
+    @endforelse
 </div>
 @endsection

@@ -2,58 +2,19 @@
 
 @section('title', 'Rekapitulasi Nilai')
 
-@push('styles')
-<style>
-    .nilai-card {
-        background: var(--bg-card); border-radius: 12px; padding: 20px;
-        border: 1px solid #334155; border-top: 4px solid var(--purple);
-        transition: transform 0.3s; position: relative;
-    }
-    .nilai-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(139, 92, 246, 0.2); }
-
-    .card-header-flex {
-        display: flex; align-items: center; gap: 15px; margin-bottom: 15px;
-        padding-bottom: 15px; border-bottom: 1px dashed #334155;
-    }
-    .mini-avatar { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--purple); }
-
-    .semester-badge {
-        position: absolute; top: 15px; right: 15px;
-        font-size: 0.7rem; font-weight: bold; text-transform: uppercase;
-        padding: 3px 8px; border-radius: 10px;
-    }
-    .smt-ganjil { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid #38bdf8; }
-    .smt-genap  { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid #f59e0b; }
-
-    .score-grid {
-        display: grid; grid-template-columns: 1fr 1fr 1.5fr; gap: 8px; margin-top: 15px;
-    }
-    .score-item {
-        background: #0f172a; padding: 8px; border-radius: 8px;
-        text-align: center; border: 1px solid #334155;
-    }
-    .score-label { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px; }
-    .score-val { font-weight: bold; color: white; font-family: 'Courier New', monospace; font-size: 1rem; }
-
-    .score-final { background: rgba(16, 185, 129, 0.1); border-color: var(--success); }
-    .score-final .score-label { color: var(--success); }
-    .score-final .score-val { color: var(--success); font-size: 1.2rem; }
-</style>
-@endpush
-
 @section('content')
 <div class="page-header-actions">
     <div>
-        <h2 style="color: var(--purple); margin: 0; font-size: 2rem;">Data Nilai Siswa</h2>
-        <p style="color: var(--text-muted); margin: 5px 0 0;">Kartu Hasil Studi (KHS) Digital.</p>
+        <h2 class="page-title">Data Nilai Siswa</h2>
+        <p class="page-subtitle">Kartu Hasil Studi (KHS) Digital siswa.</p>
     </div>
-    <div style="display: flex; gap: 10px;">
-        <a href="{{ route('export.preview', ['type' => 'nilai']) }}" class="btn" style="background: var(--success);">
+    <div class="header-btn-group">
+        <a href="{{ route('export.preview', ['type' => 'nilai']) }}" class="btn btn-outline">
             <i class="fas fa-file-csv"></i> Preview Export
         </a>
 
         @if(in_array(Auth::user()->role, ['admin', 'guru'], true))
-        <button id="toggleFormBtn" class="btn" style="background: var(--purple);">
+        <button id="toggleFormBtn" class="btn">
             <i class="fas fa-file-signature"></i> Input Nilai
         </button>
         @endif
@@ -61,8 +22,8 @@
 </div>
 
 @if(in_array(Auth::user()->role, ['admin', 'guru'], true))
-<div id="formWrapper" class="form-panel" style="display: {{ ($edit || $errors->any()) ? 'block' : 'none' }}; border-color: var(--purple);">
-    <h3 style="color: white; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 20px;">
+<div id="formWrapper" class="form-panel" style="display: {{ ($edit || $errors->any()) ? 'block' : 'none' }};">
+    <h3 class="form-panel-title">
         <i class="fas fa-edit"></i> {{ $edit ? 'Edit Nilai' : 'Input Nilai Baru' }}
     </h3>
 
@@ -70,9 +31,9 @@
         @csrf
         @if($edit) <input type="hidden" name="id_nilai" value="{{ $edit->id_nilai }}"> @endif
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+        <div class="form-grid-3" style="margin-bottom: 18px;">
             <div class="form-group">
-                <label style="color: var(--purple);">Nama Siswa</label>
+                <label>Nama Siswa</label>
                 <select name="id_siswa" required>
                     <option value="">-- Pilih Siswa --</option>
                     @foreach($siswa as $s)
@@ -84,7 +45,7 @@
             </div>
 
             <div class="form-group">
-                <label style="color: var(--purple);">Mata Pelajaran</label>
+                <label>Mata Pelajaran</label>
                 <select name="id_ampu" required>
                     <option value="">-- Pilih Mapel --</option>
                     @foreach($ampu as $a)
@@ -96,7 +57,7 @@
             </div>
 
             <div class="form-group">
-                <label style="color: var(--purple);">Semester</label>
+                <label>Semester</label>
                 <select name="semester" required>
                     <option value="Ganjil" {{ old('semester', $edit->semester ?? '') === 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
                     <option value="Genap" {{ old('semester', $edit->semester ?? '') === 'Genap' ? 'selected' : '' }}>Genap</option>
@@ -104,59 +65,59 @@
             </div>
         </div>
 
-        <div style="background: rgba(15, 23, 42, 0.5); padding: 15px; border-radius: 8px; border: 1px solid #334155;">
-            <label style="color: white; font-weight: bold; display: block; margin-bottom: 10px;">Rincian Nilai:</label>
+        <div style="background: var(--bg-subtle); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+            <label style="color: var(--text-main); font-weight: 700; display: block; margin-bottom: 12px;">Rincian Nilai:</label>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
-                <div class="form-group">
+            <div class="form-grid-3">
+                <div class="form-group" style="margin-bottom: 0;">
                     <label>Tugas</label>
                     <input type="number" step="0.01" min="0" max="100" id="input_tugas" name="nilai_tugas"
                            value="{{ old('nilai_tugas', $edit->nilai_tugas ?? 0) }}" oninput="hitungRataRata()" required>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group" style="margin-bottom: 0;">
                     <label>UTS</label>
                     <input type="number" step="0.01" min="0" max="100" id="input_uts" name="nilai_uts"
                            value="{{ old('nilai_uts', $edit->nilai_uts ?? 0) }}" oninput="hitungRataRata()" required>
                 </div>
 
-                <div class="form-group">
-                    <label style="color: var(--success);">Nilai Akhir (Rata²)</label>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="color: var(--primary);">Nilai Akhir (Rata-rata)</label>
                     <input type="text" id="input_akhir"
                            value="{{ old('nilai_akhir', $edit->nilai_akhir ?? 0) }}" readonly
-                           style="border-color: var(--success); background: #064e3b; font-weight: bold;">
+                           style="border-color: var(--primary); background: var(--primary-soft);">
                 </div>
             </div>
         </div>
 
-        <div style="margin-top: 20px; text-align: right;">
+        <div class="form-actions">
             <button type="button" id="cancelBtn" class="btn btn-secondary">Batal</button>
-            <button type="submit" class="btn" style="background: var(--purple);">Simpan</button>
+            <button type="submit" class="btn"><i class="fas fa-save"></i> Simpan</button>
         </div>
     </form>
 </div>
 @endif
 
 <div class="student-grid">
-    @foreach($nilai as $n)
+    @forelse($nilai as $n)
     <div class="nilai-card">
         <span class="semester-badge {{ $n->semester === 'Ganjil' ? 'smt-ganjil' : 'smt-genap' }}">
             {{ $n->semester }}
         </span>
 
         <div class="card-header-flex">
-            <img src="https://ui-avatars.com/api/?name={{ urlencode($n->siswa->nama ?? 'X') }}&background=0f172a&color=a78bfa" class="mini-avatar">
+            <img src="https://ui-avatars.com/api/?name={{ urlencode($n->siswa->nama ?? 'X') }}&background=dcfce7&color=15803d&bold=true" class="mini-avatar" alt="{{ $n->siswa->nama ?? 'Siswa' }}">
             <div>
-                <h4 style="margin: 0; color: white; font-size: 1rem;">{{ $n->siswa->nama ?? 'Siswa Hapus' }}</h4>
+                <h4 style="margin: 0; color: var(--text-main); font-size: 1rem;">{{ $n->siswa->nama ?? 'Siswa Hapus' }}</h4>
                 <small style="color: var(--text-muted);">{{ $n->siswa->nisn ?? '-' }}</small>
             </div>
         </div>
 
         <div style="margin-bottom: 10px;">
-            <div style="font-weight: bold; color: var(--purple); display: flex; align-items: center; gap: 5px;">
+            <div style="font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 6px;">
                 <i class="fas fa-book"></i> {{ $n->ampu->mapel->nama_mapel ?? 'Mapel Hapus' }}
             </div>
-            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 3px;">
+            <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 4px;">
                 <i class="fas fa-chalkboard-teacher"></i> {{ $n->ampu->guru->nama ?? 'Guru Hapus' }}
             </div>
         </div>
@@ -177,7 +138,7 @@
         </div>
 
         @if(in_array(Auth::user()->role, ['admin', 'guru'], true))
-        <div class="card-actions" style="margin-top: 15px; border-top: 1px solid #334155; padding-top: 15px;">
+        <div class="card-actions" style="margin-top: 16px; border-top: 1px solid var(--border-color); padding-top: 14px;">
             <a href="{{ route('nilai', ['edit' => $n->id_nilai]) }}" class="btn-icon btn-edit" title="Edit">
                 <i class="fas fa-pen"></i>
             </a>
@@ -185,13 +146,19 @@
                     data-url="{{ route('nilai.hapus', $n->id_nilai) }}"
                     data-name="{{ ($n->siswa->nama ?? 'Siswa') . ' - ' . ($n->ampu->mapel->nama_mapel ?? 'Mapel') }}"
                     onclick="openDeleteModal(this)"
-                    class="btn-icon btn-delete" style="border:none;" title="Hapus">
+                    class="btn-icon btn-delete" title="Hapus">
                 <i class="fas fa-trash-can"></i>
             </button>
         </div>
         @endif
     </div>
-    @endforeach
+    @empty
+    <div class="empty-state">
+        <i class="fas fa-star"></i>
+        <strong>Belum ada data nilai.</strong>
+        <p style="margin: 6px 0 0;">Nilai siswa akan muncul di sini setelah diinput.</p>
+    </div>
+    @endforelse
 </div>
 @endsection
 

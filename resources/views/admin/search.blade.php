@@ -1,120 +1,19 @@
 @extends('layouts.admin')
 
 @section('title', 'Live Search')
-@section('logo_spin', 'fa-spin" style="--fa-animation-duration: 15s;')
-
-@push('styles')
-<style>
-    .search-container {
-        position: relative;
-        max-width: 700px;
-        width: 100%;
-        margin: 0 auto;
-    }
-
-    .search-input-wrapper {
-        position: relative;
-    }
-
-    .search-btn-icon {
-        position: absolute;
-        right: 18px;
-        top: 50%;
-        transform: translateY(-50%);
-        background: none;
-        border: none;
-        color: var(--primary);
-        font-size: 1.2rem;
-        cursor: pointer;
-    }
-
-    .live-search-results {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        width: 100%;
-        background: rgba(30, 41, 59, 0.95);
-        backdrop-filter: blur(10px);
-        border: 1px solid var(--primary);
-        border-top: none;
-        border-radius: 0 0 20px 20px;
-        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
-        z-index: 999;
-        display: none;
-        max-height: 400px;
-        overflow-y: auto;
-    }
-
-    .search-item {
-        display: flex;
-        align-items: center;
-        padding: 15px 20px;
-        border-bottom: 1px solid #334155;
-        cursor: pointer;
-        transition: 0.2s;
-        text-decoration: none;
-    }
-
-    .search-item:last-child { border-bottom: none; }
-
-    .search-item:hover {
-        background: rgba(56, 189, 248, 0.1);
-        padding-left: 25px;
-    }
-
-    .item-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.2rem;
-        margin-right: 15px;
-        background: rgba(255, 255, 255, 0.05);
-    }
-
-    .item-info h4 {
-        margin: 0;
-        color: #f1f5f9;
-        font-size: 1rem;
-    }
-
-    .item-info small {
-        color: #94a3b8;
-        font-size: 0.8rem;
-    }
-
-    .item-category {
-        margin-left: auto;
-        font-size: 0.7rem;
-        text-transform: uppercase;
-        padding: 3px 8px;
-        border-radius: 4px;
-        font-weight: bold;
-        background: rgba(255, 255, 255, 0.1);
-    }
-
-    .loading-spinner {
-        text-align: center;
-        padding: 20px;
-        color: var(--primary);
-        display: none;
-    }
-
-    .no-result {
-        padding: 20px;
-        text-align: center;
-        color: #94a3b8;
-    }
-</style>
-@endpush
 
 @section('raw_content')
-<section class="search-hero" style="min-height: 85vh; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding: 100px 20px 40px;">
-    <h1 style="color: white; margin-bottom: 20px; text-shadow: 0 0 20px var(--primary);">
-        GLOBAL DATABASE ACCESS
+<section class="search-hero">
+    <span class="role-pill" style="margin-bottom: 14px;">
+        <i class="fas fa-search"></i> Global Search
+    </span>
+
+    <h1 style="color: var(--text-main); margin: 0 0 10px; font-size: 2.1rem; font-weight: 800; text-align: center;">
+        Pencarian Data Akademik
     </h1>
+    <p style="color: var(--text-muted); margin: 0 0 28px; text-align: center;">
+        Cari cepat data siswa, guru, mata pelajaran, kelas, dan berita sekolah.
+    </p>
 
     <div class="search-container">
         <div class="search-input-wrapper">
@@ -137,8 +36,8 @@
         </div>
     </div>
 
-    <p style="color: #64748b; margin-top: 30px;">
-        <i class="fas fa-info-circle"></i> Hasil akan muncul otomatis saat Anda mengetik.
+    <p style="color: var(--text-muted); margin-top: 24px; font-size: 0.9rem;">
+        <i class="fas fa-info-circle" style="color: var(--primary);"></i> Hasil akan muncul otomatis saat Anda mengetik.
     </p>
 </section>
 @endsection
@@ -199,9 +98,10 @@
             const empty = document.createElement('div');
             empty.className = 'no-result';
             const icon = document.createElement('i');
-            icon.className = 'fas fa-ghost';
-            icon.style.fontSize = '2rem';
+            icon.className = 'fas fa-search';
+            icon.style.fontSize = '1.8rem';
             icon.style.marginBottom = '10px';
+            icon.style.color = 'var(--primary)';
             empty.appendChild(icon);
             empty.appendChild(document.createElement('br'));
             empty.appendChild(document.createTextNode('Data tidak ditemukan.'));
@@ -218,8 +118,8 @@
 
             const iconBox = document.createElement('div');
             iconBox.className = 'item-icon';
-            iconBox.style.color = item.color || '#38bdf8';
-            iconBox.style.border = '1px solid ' + (item.color || '#38bdf8');
+            iconBox.style.color = item.color || '#15803d';
+            iconBox.style.border = '1px solid ' + (item.color || '#15803d');
             const icon = document.createElement('i');
             icon.className = item.icon || 'fas fa-circle';
             iconBox.appendChild(icon);
@@ -235,8 +135,8 @@
 
             const cat = document.createElement('div');
             cat.className = 'item-category';
-            cat.style.color = item.color || '#38bdf8';
-            cat.style.border = '1px solid ' + (item.color || '#38bdf8');
+            cat.style.color = item.color || '#15803d';
+            cat.style.border = '1px solid ' + (item.color || '#15803d');
             cat.textContent = item.category || '';
 
             link.appendChild(iconBox);

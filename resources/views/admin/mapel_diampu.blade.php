@@ -2,32 +2,19 @@
 
 @section('title', 'Distribusi Pengajaran')
 
-@push('styles')
-<style>
-    .teaching-badge-container {
-        background: #0f172a; border-radius: 8px; padding: 15px; margin: 15px 0;
-        border: 1px solid #334155; display: flex; flex-direction: column; gap: 10px;
-    }
-    .t-badge { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 8px; border-radius: 6px; font-size: 0.9rem; font-weight: bold; }
-    .tb-mapel { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
-    .tb-kelas { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
-    .arrow-divider { color: var(--text-muted); font-size: 0.8rem; opacity: 0.5; }
-</style>
-@endpush
-
 @section('content')
 <div class="page-header-actions">
     <div>
-        <h2 style="color: var(--purple); margin: 0; font-size: 2rem;">Distribusi Pengajaran</h2>
-        <p style="color: var(--text-muted); margin: 5px 0 0;">Plotting Guru, Mapel, dan Kelas.</p>
+        <h2 class="page-title">Distribusi Pengajaran</h2>
+        <p class="page-subtitle">Plotting guru pengajar, mata pelajaran, dan kelas.</p>
     </div>
-    <div style="display: flex; gap: 10px;">
-        <a href="{{ route('export.preview', ['type' => 'mapel_diampu']) }}" class="btn" style="background: var(--success);">
+    <div class="header-btn-group">
+        <a href="{{ route('export.preview', ['type' => 'mapel_diampu']) }}" class="btn btn-outline">
             <i class="fas fa-file-csv"></i> Preview Export
         </a>
 
         @if(Auth::user()->role === 'admin')
-        <button id="toggleFormBtn" class="btn" style="background: var(--purple);">
+        <button id="toggleFormBtn" class="btn">
             <i class="fas fa-network-wired"></i> Atur Jadwal
         </button>
         @endif
@@ -35,8 +22,8 @@
 </div>
 
 @if(Auth::user()->role === 'admin')
-<div id="formWrapper" class="form-panel" style="display: {{ ($edit || $errors->any()) ? 'block' : 'none' }}; border-color: var(--purple);">
-    <h3 style="color: white; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 20px;">
+<div id="formWrapper" class="form-panel" style="display: {{ ($edit || $errors->any()) ? 'block' : 'none' }};">
+    <h3 class="form-panel-title">
         <i class="fas fa-chalkboard-teacher"></i> {{ $edit ? 'Edit Data Pengajaran' : 'Tambah Data Pengajaran' }}
     </h3>
 
@@ -44,9 +31,9 @@
         @csrf
         @if($edit) <input type="hidden" name="id_ampu" value="{{ $edit->id_ampu }}"> @endif
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+        <div class="form-grid-3">
             <div class="form-group">
-                <label style="color: var(--purple);">Guru Pengajar</label>
+                <label>Guru Pengajar</label>
                 <select name="id_guru" required>
                     <option value="">-- Pilih Guru --</option>
                     @foreach($guru as $g)
@@ -58,7 +45,7 @@
             </div>
 
             <div class="form-group">
-                <label style="color: var(--purple);">Mata Pelajaran</label>
+                <label>Mata Pelajaran</label>
                 <select name="id_mapel" required>
                     <option value="">-- Pilih Mapel --</option>
                     @foreach($mapel as $m)
@@ -70,7 +57,7 @@
             </div>
 
             <div class="form-group">
-                <label style="color: var(--purple);">Target Kelas</label>
+                <label>Target Kelas</label>
                 <select name="id_kelas" required>
                     <option value="">-- Pilih Kelas --</option>
                     @foreach($kelas as $k)
@@ -82,23 +69,23 @@
             </div>
         </div>
 
-        <div style="margin-top: 20px; text-align: right;">
-            <button type="button" id="cancelBtn" class="btn btn-secondary" style="margin-right: 10px;">Batal</button>
-            <button type="submit" class="btn" style="background: var(--purple);">Simpan Data</button>
+        <div class="form-actions">
+            <button type="button" id="cancelBtn" class="btn btn-secondary">Batal</button>
+            <button type="submit" class="btn"><i class="fas fa-save"></i> Simpan Data</button>
         </div>
     </form>
 </div>
 @endif
 
 <div class="student-grid">
-    @foreach($ampu as $a)
-    <div class="student-card" style="border-top: 4px solid var(--purple);">
-        <img src="https://ui-avatars.com/api/?name={{ urlencode($a->guru->nama ?? 'X') }}&background=0f172a&color=a78bfa&bold=true"
-             class="student-avatar" style="border-color: var(--purple);">
+    @forelse($ampu as $a)
+    <div class="student-card">
+        <img src="https://ui-avatars.com/api/?name={{ urlencode($a->guru->nama ?? 'X') }}&background=dcfce7&color=15803d&bold=true"
+             class="student-avatar" alt="{{ $a->guru->nama ?? 'Guru' }}">
 
         <h3 class="student-name">{{ $a->guru->nama ?? 'Guru Dihapus' }}</h3>
 
-        <span class="student-nisn" style="background: rgba(139, 92, 246, 0.1); color: var(--purple); border: 1px solid var(--purple);">
+        <span class="student-nisn">
             NIP: {{ $a->guru->nip ?? '-' }}
         </span>
 
@@ -124,12 +111,18 @@
                     data-url="{{ route('mapel_diampu.hapus', $a->id_ampu) }}"
                     data-name="Jadwal {{ $a->guru->nama ?? 'Guru' }}"
                     onclick="openDeleteModal(this)"
-                    class="btn-icon btn-delete" style="border:none;" title="Hapus">
+                    class="btn-icon btn-delete" title="Hapus">
                 <i class="fas fa-trash-can"></i>
             </button>
         </div>
         @endif
     </div>
-    @endforeach
+    @empty
+    <div class="empty-state">
+        <i class="fas fa-network-wired"></i>
+        <strong>Belum ada jadwal pengajaran.</strong>
+        <p style="margin: 6px 0 0;">Atur plotting guru, mapel, dan kelas di sini.</p>
+    </div>
+    @endforelse
 </div>
 @endsection

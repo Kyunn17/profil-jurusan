@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Dashboard') - PPLG FUTURISTIC</title>
+    <title>@yield('title', 'Dashboard') - PPLG System</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('assets/styles.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     @stack('styles')
@@ -13,9 +16,10 @@
 <body>
 
 <header class="header">
-    <div class="logo">
-        <i class="fas fa-globe-asia @yield('logo_spin')"></i> PPLG FUTURISTIC
-    </div>
+    <a href="{{ route('home') }}" class="logo">
+        <span class="logo-badge"><i class="fas fa-graduation-cap"></i></span>
+        <span>PPLG SYSTEM</span>
+    </a>
 
     <nav class="nav-links">
         <div class="menu-item">
@@ -43,11 +47,10 @@
                 <a href="{{ route('mapel_diampu') }}"><i class="fas fa-chalkboard"></i> Mapel Diampu</a>
                 @if(in_array(Auth::user()->role, ['admin', 'guru'], true))
                     <a href="{{ route('nilai') }}"><i class="fas fa-star"></i> Input Nilai</a>
-                    <a href="{{ route('absensi') }}"><i class="fas fa-calendar-check"></i> Rekap Absensi</a>
                 @else
                     <a href="{{ route('nilai') }}"><i class="fas fa-star"></i> Lihat Nilai</a>
-                    <a href="{{ route('absensi') }}"><i class="fas fa-calendar-check"></i> Rekap Absensi</a>
                 @endif
+                <a href="{{ route('absensi') }}"><i class="fas fa-calendar-check"></i> Rekap Absensi</a>
             </div>
         </div>
 
@@ -60,7 +63,10 @@
     </nav>
 
     <div class="user-actions">
-        <div class="profile-pic" style="background-image: url('https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=3b82f6&color=fff&bold=true');" title="{{ Auth::user()->name }}"></div>
+        <a href="{{ route('profile.edit') }}" class="profile-link" title="Profil: {{ Auth::user()->name }}">
+            <span class="profile-pic" style="background-image: url('https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=15803d&color=ffffff&bold=true');"></span>
+            <span class="profile-name">{{ Auth::user()->name }}</span>
+        </a>
 
         <form method="POST" action="{{ route('logout') }}" style="display: inline;">
             @csrf
@@ -88,14 +94,14 @@
         @endif
 
         @if(session('error'))
-            <div class="alert-success" style="background: rgba(239, 68, 68, 0.1); border-color: var(--danger); color: var(--danger);">
+            <div class="alert-error">
                 <i class="fas fa-exclamation-triangle"></i> {{ session('error') }}
             </div>
         @endif
 
         @if($errors->any())
-            <div class="alert-success" style="background: rgba(239, 68, 68, 0.1); border-color: var(--danger); color: var(--danger); display: block;">
-                <div style="font-weight: bold; margin-bottom: 6px;">
+            <div class="alert-error" style="display: block;">
+                <div style="font-weight: 700; margin-bottom: 6px;">
                     <i class="fas fa-exclamation-circle"></i> Terjadi kesalahan validasi:
                 </div>
                 <ul style="margin: 0; padding-left: 20px;">
@@ -110,21 +116,21 @@
     </div>
 @endif
 
-<footer style="text-align: center; padding: 40px; color: #64748b; font-size: 14px; border-top: 1px solid #1e293b; margin-top: 40px;">
-    <p>&copy; {{ date('Y') }} <strong>PPLG FUTURISTIC SYSTEM</strong>. All Rights Reserved.</p>
+<footer class="app-footer">
+    <p style="margin: 0;">&copy; {{ date('Y') }} <strong>PPLG SYSTEM</strong> — SMKN 4 Padalarang. All Rights Reserved.</p>
 </footer>
 
 <div id="deleteModal" class="custom-modal-overlay">
     <div class="custom-modal-box">
         <div class="modal-icon"><i class="fas fa-exclamation-triangle"></i></div>
         <h3 class="modal-title">Hapus Data?</h3>
-        <p class="modal-desc">Anda yakin ingin menghapus <strong id="deleteTargetName" style="color: var(--primary);"></strong>? Data tidak bisa dikembalikan.</p>
+        <p class="modal-desc">Anda yakin ingin menghapus <strong id="deleteTargetName" style="color: var(--danger);"></strong>? Data tidak bisa dikembalikan.</p>
         <div class="modal-actions">
             <button type="button" onclick="closeDeleteModal()" class="btn btn-secondary">Batal</button>
             <form id="globalDeleteForm" method="POST" action="" style="display: inline;">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="btn" style="background-color: var(--danger); color: white;">Ya, Hapus!</button>
+                <button type="submit" class="btn btn-danger">Ya, Hapus!</button>
             </form>
         </div>
     </div>
