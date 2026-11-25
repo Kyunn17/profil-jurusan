@@ -14,4 +14,9 @@ class Mapel extends Model
         'nama_mapel',
         'kategori'
     ];
+
+    public function mapelDiampu()
+    {
+        return $this->hasMany(MapelDiampu::class, 'id_mapel', 'id_mapel');
+    }
 }

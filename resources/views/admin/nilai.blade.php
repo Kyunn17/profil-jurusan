@@ -3,18 +3,18 @@
 @section('title', 'Rekapitulasi Nilai')
 
 @section('content')
-<div class="page-header-actions">
+<div class="page-head">
     <div>
-        <h2 class="page-title">Data Nilai Siswa</h2>
-        <p class="page-subtitle">Kartu Hasil Studi (KHS) Digital siswa.</p>
+        <h1>Data Nilai Siswa</h1>
+        <p>Klik baris KHS siswa untuk melihat rincian nilai, predikat, dan guru pengampu.</p>
     </div>
-    <div class="header-btn-group">
-        <a href="{{ route('export.preview', ['type' => 'nilai']) }}" class="btn btn-outline">
+    <div class="page-actions">
+        <a href="{{ route('export.preview', ['type' => 'nilai']) }}" class="btn btn-outline btn-sm">
             <i class="fas fa-file-csv"></i> Preview Export
         </a>
 
         @if(in_array(Auth::user()->role, ['admin', 'guru'], true))
-        <button id="toggleFormBtn" class="btn">
+        <button type="button" id="toggleFormBtn" class="btn btn-sm">
             <i class="fas fa-file-signature"></i> Input Nilai
         </button>
         @endif
@@ -31,7 +31,7 @@
         @csrf
         @if($edit) <input type="hidden" name="id_nilai" value="{{ $edit->id_nilai }}"> @endif
 
-        <div class="form-grid-3" style="margin-bottom: 18px;">
+        <div class="form-grid-3" style="margin-bottom: 14px;">
             <div class="form-group">
                 <label>Nama Siswa</label>
                 <select name="id_siswa" required>
@@ -50,7 +50,7 @@
                     <option value="">-- Pilih Mapel --</option>
                     @foreach($ampu as $a)
                     <option value="{{ $a->id_ampu }}" {{ (string) old('id_ampu', $edit->id_ampu ?? '') === (string) $a->id_ampu ? 'selected' : '' }}>
-                        {{ $a->mapel->nama_mapel ?? '-' }}
+                        {{ $a->mapel->nama_mapel ?? '-' }} — {{ $a->kelas->nama_kelas ?? '-' }}
                     </option>
                     @endforeach
                 </select>
@@ -65,101 +65,107 @@
             </div>
         </div>
 
-        <div style="background: var(--bg-subtle); padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-            <label style="color: var(--text-main); font-weight: 700; display: block; margin-bottom: 12px;">Rincian Nilai:</label>
-
+        <div style="background: var(--surface-muted); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
             <div class="form-grid-3">
                 <div class="form-group" style="margin-bottom: 0;">
-                    <label>Tugas</label>
+                    <label>Nilai Tugas</label>
                     <input type="number" step="0.01" min="0" max="100" id="input_tugas" name="nilai_tugas"
                            value="{{ old('nilai_tugas', $edit->nilai_tugas ?? 0) }}" oninput="hitungRataRata()" required>
                 </div>
 
                 <div class="form-group" style="margin-bottom: 0;">
-                    <label>UTS</label>
+                    <label>Nilai UTS</label>
                     <input type="number" step="0.01" min="0" max="100" id="input_uts" name="nilai_uts"
                            value="{{ old('nilai_uts', $edit->nilai_uts ?? 0) }}" oninput="hitungRataRata()" required>
                 </div>
 
                 <div class="form-group" style="margin-bottom: 0;">
-                    <label style="color: var(--primary);">Nilai Akhir (Rata-rata)</label>
+                    <label style="color: var(--brand);">Nilai Akhir (Rata-rata)</label>
                     <input type="text" id="input_akhir"
-                           value="{{ old('nilai_akhir', $edit->nilai_akhir ?? 0) }}" readonly
-                           style="border-color: var(--primary); background: var(--primary-soft);">
+                           value="{{ old('nilai_akhir', $edit->nilai_akhir ?? 0) }}" readonly>
                 </div>
             </div>
         </div>
 
         <div class="form-actions">
-            <button type="button" id="cancelBtn" class="btn btn-secondary">Batal</button>
-            <button type="submit" class="btn"><i class="fas fa-save"></i> Simpan</button>
+            <button type="button" id="cancelBtn" class="btn btn-secondary btn-sm">Batal</button>
+            <button type="submit" class="btn btn-sm"><i class="fas fa-save"></i> Simpan</button>
         </div>
     </form>
 </div>
 @endif
 
-<div class="student-grid">
-    @forelse($nilai as $n)
-    <div class="nilai-card">
-        <span class="semester-badge {{ $n->semester === 'Ganjil' ? 'smt-ganjil' : 'smt-genap' }}">
-            {{ $n->semester }}
-        </span>
-
-        <div class="card-header-flex">
-            <img src="https://ui-avatars.com/api/?name={{ urlencode($n->siswa->nama ?? 'X') }}&background=dcfce7&color=15803d&bold=true" class="mini-avatar" alt="{{ $n->siswa->nama ?? 'Siswa' }}">
-            <div>
-                <h4 style="margin: 0; color: var(--text-main); font-size: 1rem;">{{ $n->siswa->nama ?? 'Siswa Hapus' }}</h4>
-                <small style="color: var(--text-muted);">{{ $n->siswa->nisn ?? '-' }}</small>
-            </div>
-        </div>
-
-        <div style="margin-bottom: 10px;">
-            <div style="font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 6px;">
-                <i class="fas fa-book"></i> {{ $n->ampu->mapel->nama_mapel ?? 'Mapel Hapus' }}
-            </div>
-            <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 4px;">
-                <i class="fas fa-chalkboard-teacher"></i> {{ $n->ampu->guru->nama ?? 'Guru Hapus' }}
-            </div>
-        </div>
-
-        <div class="score-grid">
-            <div class="score-item">
-                <span class="score-label">TUGAS</span>
-                <span class="score-val">{{ $n->nilai_tugas }}</span>
-            </div>
-            <div class="score-item">
-                <span class="score-label">UTS</span>
-                <span class="score-val">{{ $n->nilai_uts }}</span>
-            </div>
-            <div class="score-item score-final">
-                <span class="score-label">N. AKHIR</span>
-                <span class="score-val">{{ $n->nilai_akhir }}</span>
-            </div>
-        </div>
-
-        @if(in_array(Auth::user()->role, ['admin', 'guru'], true))
-        <div class="card-actions" style="margin-top: 16px; border-top: 1px solid var(--border-color); padding-top: 14px;">
-            <a href="{{ route('nilai', ['edit' => $n->id_nilai]) }}" class="btn-icon btn-edit" title="Edit">
-                <i class="fas fa-pen"></i>
-            </a>
-            <button type="button"
-                    data-url="{{ route('nilai.hapus', $n->id_nilai) }}"
-                    data-name="{{ ($n->siswa->nama ?? 'Siswa') . ' - ' . ($n->ampu->mapel->nama_mapel ?? 'Mapel') }}"
-                    onclick="openDeleteModal(this)"
-                    class="btn-icon btn-delete" title="Hapus">
-                <i class="fas fa-trash-can"></i>
-            </button>
-        </div>
-        @endif
-    </div>
-    @empty
-    <div class="empty-state">
-        <i class="fas fa-star"></i>
-        <strong>Belum ada data nilai.</strong>
-        <p style="margin: 6px 0 0;">Nilai siswa akan muncul di sini setelah diinput.</p>
-    </div>
-    @endforelse
+<div class="section-toolbar">
+    <span class="section-count"><i class="fas fa-award"></i> {{ $nilai->count() }} Rekaman Nilai Akademik</span>
 </div>
+
+@if($nilai->isEmpty())
+    <div class="empty-panel">
+        <i class="fas fa-award"></i>
+        <strong>Belum ada data nilai.</strong>
+        <p style="margin: 4px 0 0;">Nilai siswa akan tampil di sini setelah diinput oleh guru atau admin.</p>
+    </div>
+@else
+    <div class="score-list">
+        @foreach($nilai as $n)
+        @php
+            $sName = $n->siswa->nama ?? 'Siswa Dihapus';
+            $parts = preg_split('/\s+/', trim($sName)) ?: ['S'];
+            $ini = strtoupper(substr($parts[0], 0, 1) . (isset($parts[1]) ? substr($parts[1], 0, 1) : ''));
+            $akhir = (float) $n->nilai_akhir;
+            $predikat = $akhir >= 85 ? 'A (Sangat Baik)' : ($akhir >= 75 ? 'B (Baik)' : ($akhir >= 60 ? 'C (Cukup)' : 'D (Perlu Perbaikan)'));
+            $canManage = in_array(Auth::user()->role, ['admin', 'guru'], true);
+            $detail = [
+                'initials' => $ini,
+                'title' => $sName,
+                'subtitle' => ($n->ampu->mapel->nama_mapel ?? 'Mapel Dihapus') . ' · Semester ' . $n->semester,
+                'badge' => 'Akhir: ' . $n->nilai_akhir,
+                'badgeClass' => $akhir >= 75 ? 'pill-hadir' : 'pill-sakit',
+                'fields' => [
+                    ['label' => 'Siswa', 'value' => $sName],
+                    ['label' => 'NISN', 'value' => $n->siswa->nisn ?? '-', 'mono' => true],
+                    ['label' => 'Kelas', 'value' => $n->ampu->kelas->nama_kelas ?? '-'],
+                    ['label' => 'Mata Pelajaran', 'value' => $n->ampu->mapel->nama_mapel ?? 'Mapel Dihapus'],
+                    ['label' => 'Guru Pengajar', 'value' => $n->ampu->guru->nama ?? 'Guru Dihapus'],
+                    ['label' => 'Semester', 'value' => $n->semester],
+                    ['label' => 'Nilai Tugas', 'value' => (string) $n->nilai_tugas, 'mono' => true],
+                    ['label' => 'Nilai UTS', 'value' => (string) $n->nilai_uts, 'mono' => true],
+                    ['label' => 'Nilai Akhir', 'value' => (string) $n->nilai_akhir, 'mono' => true],
+                    ['label' => 'Predikat', 'value' => $predikat],
+                ],
+                'editUrl' => $canManage ? route('nilai', ['edit' => $n->id_nilai]) : null,
+                'deleteUrl' => $canManage ? route('nilai.hapus', $n->id_nilai) : null,
+                'deleteName' => $sName . ' - ' . ($n->ampu->mapel->nama_mapel ?? 'Mapel'),
+            ];
+        @endphp
+        <div class="score-strip" role="button" tabindex="0" data-detail="{{ json_encode($detail) }}" onclick="openDetailModal(this)">
+            <div class="score-strip-left">
+                <span class="initials">{{ $ini }}</span>
+                <div class="score-strip-meta">
+                    <strong>{{ $sName }}</strong>
+                    <small>{{ $n->ampu->mapel->nama_mapel ?? 'Mapel Dihapus' }} · {{ $n->ampu->guru->nama ?? 'Guru Dihapus' }} · <span class="mono">{{ $n->semester }}</span></small>
+                </div>
+            </div>
+
+            <div class="score-strip-metrics">
+                <div class="score-pill-box">
+                    <span>Tugas</span>
+                    <strong>{{ $n->nilai_tugas }}</strong>
+                </div>
+                <div class="score-pill-box">
+                    <span>UTS</span>
+                    <strong>{{ $n->nilai_uts }}</strong>
+                </div>
+                <div class="score-pill-box score-pill-final">
+                    <span>Akhir</span>
+                    <strong>{{ $n->nilai_akhir }}</strong>
+                </div>
+                <i class="fas fa-chevron-right roster-chevron" style="margin-left: 4px;"></i>
+            </div>
+        </div>
+        @endforeach
+    </div>
+@endif
 @endsection
 
 @push('scripts')

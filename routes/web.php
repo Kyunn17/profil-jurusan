@@ -52,6 +52,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/nilai', [NilaiController::class, 'index'])->name('nilai');
     Route::get('/absensi', [AbsensiController::class, 'index'])->name('absensi');
 
+    // === ABSENSI MANDIRI SISWA ===
+    Route::post('/absensi/checkin', [AbsensiController::class, 'checkIn'])
+        ->middleware('role:siswa')
+        ->name('absensi.checkin');
+
     // === BERITA (Hak akses per-item dicek di controller) ===
     Route::get('/berita', [BeritaController::class, 'index'])->name('berita');
     Route::post('/berita/store', [BeritaController::class, 'store'])->name('berita.store');
@@ -108,6 +113,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Absensi
         Route::post('/absensi/store', [AbsensiController::class, 'store'])->name('absensi.store');
+        Route::post('/absensi/bulk', [AbsensiController::class, 'bulkStore'])->name('absensi.bulk');
         Route::post('/absensi/update', [AbsensiController::class, 'update'])->name('absensi.update');
         Route::delete('/absensi/hapus/{id}', [AbsensiController::class, 'destroy'])->name('absensi.hapus');
     });

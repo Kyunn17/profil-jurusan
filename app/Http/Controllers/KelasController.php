@@ -9,7 +9,7 @@ class KelasController extends Controller
 {
     public function index(Request $request)
     {
-        $kelasQuery = Kelas::query();
+        $kelasQuery = Kelas::withCount('siswa');
 
         if ($request->filled('cari')) {
             $cari = $request->cari;

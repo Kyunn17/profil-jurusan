@@ -3,30 +3,23 @@
 @section('title', 'Data Kelas')
 
 @section('content')
-<div class="page-header-actions">
+<div class="page-head">
     <div>
-        <h2 class="page-title">Data Kelas</h2>
-        <p class="page-subtitle">Manajemen ruang belajar &amp; kompetensi keahlian.</p>
+        <h1>Data Kelas</h1>
+        <p>Klik ruang kelas untuk melihat detail jurusan dan jumlah siswa terdaftar.</p>
     </div>
-    <div class="header-btn-group">
-        <a href="{{ route('export.preview', ['type' => 'kelas']) }}" class="btn btn-outline">
+    <div class="page-actions">
+        <a href="{{ route('export.preview', ['type' => 'kelas']) }}" class="btn btn-outline btn-sm">
             <i class="fas fa-file-csv"></i> Preview Export
         </a>
 
         @if(Auth::user()->role === 'admin')
-        <button id="toggleFormBtn" class="btn">
-            <i class="fas fa-plus-circle"></i> Tambah Kelas
+        <button type="button" id="toggleFormBtn" class="btn btn-sm">
+            <i class="fas fa-plus"></i> Tambah Kelas
         </button>
         @endif
     </div>
 </div>
-
-@if(request('cari'))
-<div class="alert-filter">
-    <span><i class="fas fa-filter" style="color: var(--primary);"></i> Hasil pencarian untuk: <strong>{{ request('cari') }}</strong></span>
-    <a href="{{ route('kelas') }}" class="btn btn-secondary btn-sm">Reset Pencarian</a>
-</div>
-@endif
 
 @if(Auth::user()->role === 'admin')
 <div id="formWrapper" class="form-panel" style="display: {{ ($edit || $errors->any()) ? 'block' : 'none' }};">
@@ -51,48 +44,65 @@
         </div>
 
         <div class="form-actions">
-            <button type="button" id="cancelBtn" class="btn btn-secondary">Batal</button>
-            <button type="submit" class="btn"><i class="fas fa-save"></i> Simpan</button>
+            <button type="button" id="cancelBtn" class="btn btn-secondary btn-sm">Batal</button>
+            <button type="submit" class="btn btn-sm"><i class="fas fa-save"></i> Simpan</button>
         </div>
     </form>
 </div>
 @endif
 
-<div class="student-grid">
-    @forelse($kelas as $k)
-    <div class="student-card">
-        <div class="student-avatar">
-            <i class="fas fa-school" style="font-size: 30px; color: var(--primary);"></i>
-        </div>
-
-        <h3 class="student-name">{{ $k->nama_kelas }}</h3>
-
-        <span class="student-nisn">
-            {{ $k->jurusan ?? 'Umum' }}
-        </span>
-
-        @if(Auth::user()->role === 'admin')
-        <div class="card-actions" style="margin-top: 18px;">
-            <a href="{{ route('kelas', ['edit' => $k->id_kelas]) }}" class="btn-icon btn-edit" title="Edit">
-                <i class="fas fa-pen"></i>
-            </a>
-
-            <button type="button"
-                    data-url="{{ route('kelas.hapus', $k->id_kelas) }}"
-                    data-name="{{ $k->nama_kelas }}"
-                    onclick="openDeleteModal(this)"
-                    class="btn-icon btn-delete" title="Hapus">
-                <i class="fas fa-trash-can"></i>
-            </button>
-        </div>
+<div class="section-toolbar">
+    <span class="section-count"><i class="fas fa-school"></i> {{ $kelas->count() }} Rombongan Belajar</span>
+    <form method="GET" action="{{ route('kelas') }}" class="toolbar">
+        <input type="text" name="cari" value="{{ request('cari') }}" placeholder="Cari kelas atau jurusan..." class="input-inline">
+        <button type="submit" class="btn btn-outline btn-sm">Cari</button>
+        @if(request('cari'))
+            <a href="{{ route('kelas') }}" class="btn btn-secondary btn-sm">Reset</a>
         @endif
-    </div>
-    @empty
-    <div class="empty-state">
+    </form>
+</div>
+
+@if($kelas->isEmpty())
+    <div class="empty-panel">
         <i class="fas fa-school"></i>
         <strong>Belum ada data kelas.</strong>
-        <p style="margin: 6px 0 0;">Tambahkan kelas baru untuk mulai mengelola rombel belajar.</p>
+        <p style="margin: 4px 0 0;">Tambahkan kelas baru untuk mulai mengelola rombel belajar.</p>
     </div>
-    @endforelse
-</div>
+@else
+    <div class="room-grid">
+        @foreach($kelas as $k)
+        @php
+            $siswaCount = $k->siswa_count ?? 0;
+            $detail = [
+                'initials' => strtoupper(substr(preg_replace('/\s+/', '', (string) $k->nama_kelas), 0, 2) ?: 'KL'),
+                'title' => $k->nama_kelas,
+                'subtitle' => $k->jurusan ?? 'Umum',
+                'badge' => $siswaCount . ' Siswa',
+                'badgeClass' => 'pill-hadir',
+                'fields' => [
+                    ['label' => 'Nama Kelas', 'value' => $k->nama_kelas],
+                    ['label' => 'Kompetensi Keahlian', 'value' => $k->jurusan ?? 'Umum'],
+                    ['label' => 'Jumlah Siswa Terdaftar', 'value' => $siswaCount . ' siswa', 'mono' => true],
+                ],
+                'editUrl' => Auth::user()->role === 'admin' ? route('kelas', ['edit' => $k->id_kelas]) : null,
+                'deleteUrl' => Auth::user()->role === 'admin' ? route('kelas.hapus', $k->id_kelas) : null,
+                'deleteName' => $k->nama_kelas,
+            ];
+        @endphp
+        <div class="room-tile" role="button" tabindex="0" data-detail="{{ json_encode($detail) }}" onclick="openDetailModal(this)">
+            <div class="room-tile-top">
+                <div>
+                    <h3>{{ $k->nama_kelas }}</h3>
+                    <p>{{ $k->jurusan ?? 'Umum' }}</p>
+                </div>
+                <i class="fas fa-chevron-right roster-chevron"></i>
+            </div>
+            <div class="room-tile-foot">
+                <span><i class="fas fa-users" style="color: var(--brand); margin-right: 5px;"></i> <span class="mono">{{ $siswaCount }}</span> Siswa</span>
+                <span class="status-pill pill-hadir">Aktif</span>
+            </div>
+        </div>
+        @endforeach
+    </div>
+@endif
 @endsection

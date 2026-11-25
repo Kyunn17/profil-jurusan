@@ -255,4 +255,135 @@ class SecurityAndCrudTest extends TestCase
         $this->assertContains('Siswa', $categoriesSiswa);
         $this->assertNotContains('User', $categoriesSiswa);
     }
+
+    public function test_student_daily_checkin_prevents_duplicates_and_rejects_alpha(): void
+    {
+        $fixture = $this->seedAcademicFixture();
+        $today = now()->toDateString();
+
+        // Matched automatically by name
+        $siswaByName = User::factory()->create(['name' => 'Budi Santoso']);
+
+        // Cannot submit alpha via self check-in
+        $this->actingAs($siswaByName)
+            ->post(route('absensi.checkin'), ['status' => 'alpha'])
+            ->assertSessionHasErrors('status');
+
+        // First check-in succeeds with server today() and student's id_kelas
+        $this->actingAs($siswaByName)
+            ->from(route('absensi'))
+            ->post(route('absensi.checkin'), ['status' => 'hadir'])
+            ->assertRedirect(route('absensi'))
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('absensi', [
+            'id_siswa' => $fixture['siswa']->id_siswa,
+            'id_kelas' => $fixture['kelas']->id_kelas,
+            'tanggal' => $today,
+            'status' => 'hadir',
+        ]);
+
+        // Duplicate check-in on the same day is blocked
+        $this->actingAs($siswaByName)
+            ->from(route('absensi'))
+            ->post(route('absensi.checkin'), ['status' => 'izin'])
+            ->assertRedirect(route('absensi'))
+            ->assertSessionHas('error');
+
+        $this->assertSame(1, Absensi::where('id_siswa', $fixture['siswa']->id_siswa)->count());
+
+        // Unlinked student links via id_siswa on check-in
+        $siswa2 = Siswa::create([
+            'nisn' => '5556667778',
+            'nama' => 'Siti Nurhaliza',
+            'jenis_kelamin' => 'Perempuan',
+            'id_kelas' => $fixture['kelas']->id_kelas,
+        ]);
+        $unlinkedUser = User::factory()->create(['name' => 'Akun Siti']);
+
+        $this->actingAs($unlinkedUser)
+            ->from(route('home'))
+            ->post(route('absensi.checkin'), [
+                'id_siswa' => $siswa2->id_siswa,
+                'status' => 'izin',
+            ])
+            ->assertRedirect(route('home'))
+            ->assertSessionHas('success');
+
+        $this->assertSame($siswa2->id_siswa, $unlinkedUser->fresh()->id_siswa);
+        $this->assertDatabaseHas('absensi', [
+            'id_siswa' => $siswa2->id_siswa,
+            'tanggal' => $today,
+            'status' => 'izin',
+        ]);
+
+        // Guru and admin cannot use student self check-in endpoint
+        $guru = User::factory()->guru()->create();
+        $admin = User::factory()->admin()->create();
+        $this->actingAs($guru)->post(route('absensi.checkin'), ['status' => 'hadir'])->assertForbidden();
+        $this->actingAs($admin)->post(route('absensi.checkin'), ['status' => 'hadir'])->assertForbidden();
+    }
+
+    public function test_teacher_bulk_daily_roll_call_creates_and_updates_attendance(): void
+    {
+        $fixture = $this->seedAcademicFixture();
+        $siswa2 = Siswa::create([
+            'nisn' => '2223334445',
+            'nama' => 'Ani Wijaya',
+            'jenis_kelamin' => 'Perempuan',
+            'id_kelas' => $fixture['kelas']->id_kelas,
+        ]);
+
+        $guru = User::factory()->guru()->create();
+        $siswaUser = User::factory()->create();
+        $tanggal = '2026-11-25';
+
+        // Siswa cannot access bulk roll-call endpoint
+        $this->actingAs($siswaUser)->post(route('absensi.bulk'), [
+            'tanggal' => $tanggal,
+            'statuses' => [$fixture['siswa']->id_siswa => 'hadir'],
+        ])->assertForbidden();
+
+        // Guru submits initial roll-call
+        $this->actingAs($guru)->post(route('absensi.bulk'), [
+            'tanggal' => $tanggal,
+            'kelas' => $fixture['kelas']->id_kelas,
+            'statuses' => [
+                $fixture['siswa']->id_siswa => 'hadir',
+                $siswa2->id_siswa => 'sakit',
+            ],
+        ])->assertRedirect(route('absensi', ['tanggal' => $tanggal, 'kelas' => $fixture['kelas']->id_kelas]));
+
+        $this->assertDatabaseHas('absensi', [
+            'id_siswa' => $fixture['siswa']->id_siswa,
+            'tanggal' => $tanggal,
+            'status' => 'hadir',
+        ]);
+        $this->assertDatabaseHas('absensi', [
+            'id_siswa' => $siswa2->id_siswa,
+            'tanggal' => $tanggal,
+            'status' => 'sakit',
+        ]);
+
+        // Guru updates existing statuses idempotently
+        $this->actingAs($guru)->post(route('absensi.bulk'), [
+            'tanggal' => $tanggal,
+            'statuses' => [
+                $fixture['siswa']->id_siswa => 'izin',
+                $siswa2->id_siswa => 'hadir',
+            ],
+        ])->assertRedirect(route('absensi', ['tanggal' => $tanggal]));
+
+        $this->assertSame(1, Absensi::where('id_siswa', $fixture['siswa']->id_siswa)->whereDate('tanggal', $tanggal)->count());
+        $this->assertDatabaseHas('absensi', [
+            'id_siswa' => $fixture['siswa']->id_siswa,
+            'tanggal' => $tanggal,
+            'status' => 'izin',
+        ]);
+        $this->assertDatabaseHas('absensi', [
+            'id_siswa' => $siswa2->id_siswa,
+            'tanggal' => $tanggal,
+            'status' => 'hadir',
+        ]);
+    }
 }

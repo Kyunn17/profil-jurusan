@@ -3,30 +3,23 @@
 @section('title', 'Mata Pelajaran')
 
 @section('content')
-<div class="page-header-actions">
+<div class="page-head">
     <div>
-        <h2 class="page-title">Mata Pelajaran</h2>
-        <p class="page-subtitle">Kurikulum dan daftar mata pelajaran sekolah.</p>
+        <h1>Mata Pelajaran</h1>
+        <p>Katalog kurikulum dikelompokkan berdasarkan kategori. Klik mapel untuk melihat detail.</p>
     </div>
-    <div class="header-btn-group">
-        <a href="{{ route('export.preview', ['type' => 'mapel']) }}" class="btn btn-outline">
+    <div class="page-actions">
+        <a href="{{ route('export.preview', ['type' => 'mapel']) }}" class="btn btn-outline btn-sm">
             <i class="fas fa-file-csv"></i> Preview Export
         </a>
 
         @if(Auth::user()->role === 'admin')
-        <button id="toggleFormBtn" class="btn">
+        <button type="button" id="toggleFormBtn" class="btn btn-sm">
             <i class="fas fa-book-open"></i> Tambah Mapel
         </button>
         @endif
     </div>
 </div>
-
-@if(request('cari'))
-<div class="alert-filter">
-    <span><i class="fas fa-filter" style="color: var(--primary);"></i> Hasil pencarian untuk: <strong>{{ request('cari') }}</strong></span>
-    <a href="{{ route('mapel') }}" class="btn btn-secondary btn-sm">Reset Pencarian</a>
-</div>
-@endif
 
 @if(Auth::user()->role === 'admin')
 <div id="formWrapper" class="form-panel" style="display: {{ ($edit || $errors->any()) ? 'block' : 'none' }};">
@@ -56,8 +49,8 @@
         </div>
 
         <div class="form-actions">
-            <button type="button" id="cancelBtn" class="btn btn-secondary">Batal</button>
-            <button type="submit" class="btn">
+            <button type="button" id="cancelBtn" class="btn btn-secondary btn-sm">Batal</button>
+            <button type="submit" class="btn btn-sm">
                 <i class="fas fa-save"></i> {{ $edit ? 'Perbarui' : 'Simpan' }}
             </button>
         </div>
@@ -65,43 +58,66 @@
 </div>
 @endif
 
-<div class="student-grid">
-    @forelse($mapel as $m)
-    <div class="student-card" style="border-top-color: var(--accent);">
-        <div class="student-avatar" style="background: var(--primary-soft);">
-            <i class="fas fa-book" style="font-size: 30px; color: var(--primary);"></i>
-        </div>
-
-        <h3 class="student-name" style="min-height: 48px; display:flex; align-items:center; justify-content:center;">
-            {{ $m->nama_mapel }}
-        </h3>
-
-        <span class="student-nisn">
-            {{ $m->kategori ?? 'Umum' }}
-        </span>
-
-        @if(Auth::user()->role === 'admin')
-        <div class="card-actions" style="margin-top: 16px;">
-            <a href="{{ route('mapel', ['edit' => $m->id_mapel]) }}" class="btn-icon btn-edit" title="Edit">
-                <i class="fas fa-pen"></i>
-            </a>
-
-            <button type="button"
-                    data-url="{{ route('mapel.hapus', $m->id_mapel) }}"
-                    data-name="{{ $m->nama_mapel }}"
-                    onclick="openDeleteModal(this)"
-                    class="btn-icon btn-delete" title="Hapus">
-                <i class="fas fa-trash-can"></i>
-            </button>
-        </div>
+<div class="section-toolbar">
+    <span class="section-count"><i class="fas fa-book"></i> {{ $mapel->count() }} Mata Pelajaran</span>
+    <form method="GET" action="{{ route('mapel') }}" class="toolbar">
+        <input type="text" name="cari" value="{{ request('cari') }}" placeholder="Cari nama atau kategori..." class="input-inline">
+        <button type="submit" class="btn btn-outline btn-sm">Cari</button>
+        @if(request('cari'))
+            <a href="{{ route('mapel') }}" class="btn btn-secondary btn-sm">Reset</a>
         @endif
-    </div>
-    @empty
-    <div class="empty-state">
+    </form>
+</div>
+
+@if($mapel->isEmpty())
+    <div class="empty-panel">
         <i class="fas fa-book"></i>
         <strong>Belum ada mata pelajaran.</strong>
-        <p style="margin: 6px 0 0;">Data kurikulum akan ditampilkan di sini.</p>
+        <p style="margin: 4px 0 0;">Data kurikulum akan ditampilkan di sini.</p>
     </div>
-    @endforelse
-</div>
+@else
+    @php
+        $groupedMapel = $mapel->groupBy(fn ($item) => $item->kategori ?: 'Umum');
+    @endphp
+
+    @foreach($groupedMapel as $kategori => $items)
+    <section class="catalog-group">
+        <div class="catalog-group-head">
+            <h3>{{ $kategori }}</h3>
+            <span class="status-pill pill-neutral mono">{{ $items->count() }} Mapel</span>
+        </div>
+
+        <div class="catalog-chips">
+            @foreach($items as $m)
+            @php
+                $ampuCount = $m->mapel_diampu_count ?? 0;
+                $detail = [
+                    'initials' => strtoupper(substr(preg_replace('/\s+/', '', (string) $m->nama_mapel), 0, 2) ?: 'MP'),
+                    'initialsClass' => 'initials-teal',
+                    'title' => $m->nama_mapel,
+                    'subtitle' => 'Kategori: ' . ($m->kategori ?? 'Umum'),
+                    'badge' => $m->kategori ?? 'Umum',
+                    'badgeClass' => 'pill-izin',
+                    'fields' => [
+                        ['label' => 'Nama Mata Pelajaran', 'value' => $m->nama_mapel],
+                        ['label' => 'Kategori', 'value' => $m->kategori ?? 'Umum'],
+                        ['label' => 'Kelas Diampu', 'value' => $ampuCount . ' kelas', 'mono' => true],
+                    ],
+                    'editUrl' => Auth::user()->role === 'admin' ? route('mapel', ['edit' => $m->id_mapel]) : null,
+                    'deleteUrl' => Auth::user()->role === 'admin' ? route('mapel.hapus', $m->id_mapel) : null,
+                    'deleteName' => $m->nama_mapel,
+                ];
+            @endphp
+            <div class="catalog-chip" role="button" tabindex="0" data-detail="{{ json_encode($detail) }}" onclick="openDetailModal(this)">
+                <div>
+                    <strong>{{ $m->nama_mapel }}</strong>
+                    <small class="mono">{{ $ampuCount }} kelas diampu</small>
+                </div>
+                <i class="fas fa-chevron-right roster-chevron"></i>
+            </div>
+            @endforeach
+        </div>
+    </section>
+    @endforeach
+@endif
 @endsection

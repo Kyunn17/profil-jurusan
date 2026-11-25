@@ -1,44 +1,32 @@
 @extends('layouts.admin')
 
-@section('title', 'Live Search')
+@section('title', 'Pencarian Data')
 
-@section('raw_content')
-<section class="search-hero">
-    <span class="role-pill" style="margin-bottom: 14px;">
-        <i class="fas fa-search"></i> Global Search
-    </span>
+@section('content')
+<div class="page-head">
+    <div>
+        <h1>Pencarian Global</h1>
+        <p>Telusuri data siswa, guru, mata pelajaran, kelas, dan berita secara langsung.</p>
+    </div>
+</div>
 
-    <h1 style="color: var(--text-main); margin: 0 0 10px; font-size: 2.1rem; font-weight: 800; text-align: center;">
-        Pencarian Data Akademik
-    </h1>
-    <p style="color: var(--text-muted); margin: 0 0 28px; text-align: center;">
-        Cari cepat data siswa, guru, mata pelajaran, kelas, dan berita sekolah.
-    </p>
-
-    <div class="search-container">
-        <div class="search-input-wrapper">
-            <input type="text" id="liveSearchInput" class="search-input-lg"
+<section class="panel">
+    <div class="panel-body">
+        <div class="search-box-wrap">
+            <i class="fas fa-search search-box-icon"></i>
+            <input type="text" id="liveSearchInput" class="search-box-input"
                    value="{{ $query ?? '' }}"
-                   placeholder="Ketik nama siswa, guru, mapel..."
+                   placeholder="Ketik nama siswa, NISN, guru, mapel, kelas, atau judul berita..."
                    autocomplete="off" autofocus>
-
-            <button type="button" class="search-btn-icon" aria-label="Cari">
-                <i class="fas fa-search"></i>
-            </button>
         </div>
 
-        <div id="resultsBox" class="live-search-results">
-            <div id="loading" class="loading-spinner">
-                <i class="fas fa-circle-notch fa-spin fa-2x"></i>
+        <div id="resultsBox" class="search-results-list">
+            <div id="loading" style="display: none; padding: 20px; text-align: center; color: var(--brand);">
+                <i class="fas fa-circle-notch fa-spin"></i> Mencari data...
             </div>
-
             <div id="resultContent"></div>
         </div>
     </div>
-
-    <p style="color: var(--text-muted); margin-top: 24px; font-size: 0.9rem;">
-        <i class="fas fa-info-circle" style="color: var(--primary);"></i> Hasil akan muncul otomatis saat Anda mengetik.
-    </p>
 </section>
 @endsection
 
@@ -62,7 +50,7 @@
         resultContent.replaceChildren();
 
         clearTimeout(timeout);
-        timeout = setTimeout(() => fetchData(query), 300);
+        timeout = setTimeout(() => fetchData(query), 250);
     }
 
     input.addEventListener('input', function () {
@@ -85,7 +73,9 @@
             .catch(() => {
                 loading.style.display = 'none';
                 const errBox = document.createElement('div');
-                errBox.className = 'no-result';
+                errBox.style.padding = '20px';
+                errBox.style.textAlign = 'center';
+                errBox.style.color = 'var(--ink-3)';
                 errBox.textContent = 'Terjadi kesalahan saat mencari data.';
                 resultContent.replaceChildren(errBox);
             });
@@ -96,15 +86,10 @@
 
         if (data.length === 0) {
             const empty = document.createElement('div');
-            empty.className = 'no-result';
-            const icon = document.createElement('i');
-            icon.className = 'fas fa-search';
-            icon.style.fontSize = '1.8rem';
-            icon.style.marginBottom = '10px';
-            icon.style.color = 'var(--primary)';
-            empty.appendChild(icon);
-            empty.appendChild(document.createElement('br'));
-            empty.appendChild(document.createTextNode('Data tidak ditemukan.'));
+            empty.style.padding = '24px';
+            empty.style.textAlign = 'center';
+            empty.style.color = 'var(--ink-3)';
+            empty.textContent = 'Data tidak ditemukan untuk kata kunci tersebut.';
             resultContent.appendChild(empty);
             return;
         }
@@ -114,29 +99,29 @@
         data.forEach(item => {
             const link = document.createElement('a');
             link.href = item.url || '#';
-            link.className = 'search-item';
+            link.className = 'search-result-row';
 
             const iconBox = document.createElement('div');
-            iconBox.className = 'item-icon';
-            iconBox.style.color = item.color || '#15803d';
-            iconBox.style.border = '1px solid ' + (item.color || '#15803d');
+            iconBox.className = 'search-result-icon';
+            iconBox.style.color = item.color || '#14532d';
+            iconBox.style.border = '1px solid ' + (item.color || '#bbf7d0');
             const icon = document.createElement('i');
             icon.className = item.icon || 'fas fa-circle';
             iconBox.appendChild(icon);
 
             const info = document.createElement('div');
-            info.className = 'item-info';
-            const title = document.createElement('h4');
+            info.className = 'search-result-info';
+            const title = document.createElement('strong');
             title.textContent = item.title || '';
             const desc = document.createElement('small');
             desc.textContent = item.desc || '';
             info.appendChild(title);
             info.appendChild(desc);
 
-            const cat = document.createElement('div');
-            cat.className = 'item-category';
-            cat.style.color = item.color || '#15803d';
-            cat.style.border = '1px solid ' + (item.color || '#15803d');
+            const cat = document.createElement('span');
+            cat.className = 'search-result-tag';
+            cat.style.color = item.color || '#14532d';
+            cat.style.border = '1px solid ' + (item.color || '#bbf7d0');
             cat.textContent = item.category || '';
 
             link.appendChild(iconBox);
@@ -147,12 +132,6 @@
 
         resultContent.appendChild(fragment);
     }
-
-    document.addEventListener('click', function (e) {
-        if (!input.contains(e.target) && !resultsBox.contains(e.target)) {
-            resultsBox.style.display = 'none';
-        }
-    });
 
     if (input.value.trim() !== '') {
         triggerSearch(input.value);

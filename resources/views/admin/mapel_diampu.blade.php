@@ -3,19 +3,19 @@
 @section('title', 'Distribusi Pengajaran')
 
 @section('content')
-<div class="page-header-actions">
+<div class="page-head">
     <div>
-        <h2 class="page-title">Distribusi Pengajaran</h2>
-        <p class="page-subtitle">Plotting guru pengajar, mata pelajaran, dan kelas.</p>
+        <h1>Distribusi Pengajaran</h1>
+        <p>Klik kartu penugasan untuk melihat detail guru pengampu, mata pelajaran, dan kelas.</p>
     </div>
-    <div class="header-btn-group">
-        <a href="{{ route('export.preview', ['type' => 'mapel_diampu']) }}" class="btn btn-outline">
+    <div class="page-actions">
+        <a href="{{ route('export.preview', ['type' => 'mapel_diampu']) }}" class="btn btn-outline btn-sm">
             <i class="fas fa-file-csv"></i> Preview Export
         </a>
 
         @if(Auth::user()->role === 'admin')
-        <button id="toggleFormBtn" class="btn">
-            <i class="fas fa-network-wired"></i> Atur Jadwal
+        <button type="button" id="toggleFormBtn" class="btn btn-sm">
+            <i class="fas fa-plus"></i> Atur Jadwal
         </button>
         @endif
     </div>
@@ -70,59 +70,67 @@
         </div>
 
         <div class="form-actions">
-            <button type="button" id="cancelBtn" class="btn btn-secondary">Batal</button>
-            <button type="submit" class="btn"><i class="fas fa-save"></i> Simpan Data</button>
+            <button type="button" id="cancelBtn" class="btn btn-secondary btn-sm">Batal</button>
+            <button type="submit" class="btn btn-sm"><i class="fas fa-save"></i> Simpan Data</button>
         </div>
     </form>
 </div>
 @endif
 
-<div class="student-grid">
-    @forelse($ampu as $a)
-    <div class="student-card">
-        <img src="https://ui-avatars.com/api/?name={{ urlencode($a->guru->nama ?? 'X') }}&background=dcfce7&color=15803d&bold=true"
-             class="student-avatar" alt="{{ $a->guru->nama ?? 'Guru' }}">
-
-        <h3 class="student-name">{{ $a->guru->nama ?? 'Guru Dihapus' }}</h3>
-
-        <span class="student-nisn">
-            NIP: {{ $a->guru->nip ?? '-' }}
-        </span>
-
-        <div class="teaching-badge-container">
-            <div class="t-badge tb-mapel">
-                <i class="fas fa-book"></i> {{ $a->mapel->nama_mapel ?? 'Mapel Dihapus' }}
-            </div>
-
-            <div class="arrow-divider"><i class="fas fa-arrow-down"></i> Mengajar Di</div>
-
-            <div class="t-badge tb-kelas">
-                <i class="fas fa-users"></i> {{ $a->kelas->nama_kelas ?? 'Kelas Dihapus' }}
-            </div>
-        </div>
-
-        @if(Auth::user()->role === 'admin')
-        <div class="card-actions">
-            <a href="{{ route('mapel_diampu', ['edit' => $a->id_ampu]) }}" class="btn-icon btn-edit" title="Edit">
-                <i class="fas fa-pen"></i>
-            </a>
-
-            <button type="button"
-                    data-url="{{ route('mapel_diampu.hapus', $a->id_ampu) }}"
-                    data-name="Jadwal {{ $a->guru->nama ?? 'Guru' }}"
-                    onclick="openDeleteModal(this)"
-                    class="btn-icon btn-delete" title="Hapus">
-                <i class="fas fa-trash-can"></i>
-            </button>
-        </div>
-        @endif
-    </div>
-    @empty
-    <div class="empty-state">
-        <i class="fas fa-network-wired"></i>
-        <strong>Belum ada jadwal pengajaran.</strong>
-        <p style="margin: 6px 0 0;">Atur plotting guru, mapel, dan kelas di sini.</p>
-    </div>
-    @endforelse
+<div class="section-toolbar">
+    <span class="section-count"><i class="fas fa-diagram-project"></i> {{ $ampu->count() }} Penugasan Pengajaran</span>
 </div>
+
+@if($ampu->isEmpty())
+    <div class="empty-panel">
+        <i class="fas fa-diagram-project"></i>
+        <strong>Belum ada jadwal pengajaran.</strong>
+        <p style="margin: 4px 0 0;">Atur plotting guru pengajar, mata pelajaran, dan kelas di sini.</p>
+    </div>
+@else
+    <div class="pair-grid">
+        @foreach($ampu as $a)
+        @php
+            $gName = $a->guru->nama ?? 'Guru Dihapus';
+            $parts = preg_split('/\s+/', trim($gName)) ?: ['G'];
+            $ini = strtoupper(substr($parts[0], 0, 1) . (isset($parts[1]) ? substr($parts[1], 0, 1) : ''));
+            $detail = [
+                'initials' => $ini,
+                'initialsClass' => 'initials-teal',
+                'title' => $a->mapel->nama_mapel ?? 'Mapel Dihapus',
+                'subtitle' => 'Pengajar: ' . $gName,
+                'badge' => $a->kelas->nama_kelas ?? 'Kelas Dihapus',
+                'badgeClass' => 'pill-hadir',
+                'fields' => [
+                    ['label' => 'Mata Pelajaran', 'value' => $a->mapel->nama_mapel ?? 'Mapel Dihapus'],
+                    ['label' => 'Kategori Mapel', 'value' => $a->mapel->kategori ?? '-'],
+                    ['label' => 'Kelas', 'value' => $a->kelas->nama_kelas ?? 'Kelas Dihapus'],
+                    ['label' => 'Jurusan', 'value' => $a->kelas->jurusan ?? '-'],
+                    ['label' => 'Guru Pengajar', 'value' => $gName],
+                    ['label' => 'NIP Guru', 'value' => $a->guru->nip ?? '-', 'mono' => true],
+                ],
+                'editUrl' => Auth::user()->role === 'admin' ? route('mapel_diampu', ['edit' => $a->id_ampu]) : null,
+                'deleteUrl' => Auth::user()->role === 'admin' ? route('mapel_diampu.hapus', $a->id_ampu) : null,
+                'deleteName' => 'Jadwal ' . $gName,
+            ];
+        @endphp
+        <div class="pair-card" role="button" tabindex="0" data-detail="{{ json_encode($detail) }}" onclick="openDetailModal(this)">
+            <div class="pair-head">
+                <strong>{{ $a->mapel->nama_mapel ?? 'Mapel Dihapus' }}</strong>
+                <span class="status-pill pill-hadir">{{ $a->kelas->nama_kelas ?? 'Kelas Dihapus' }}</span>
+            </div>
+            <div class="pair-body">
+                <div class="cell-person">
+                    <span class="initials initials-teal">{{ $ini }}</span>
+                    <div>
+                        <strong>{{ $gName }}</strong>
+                        <small class="mono">NIP: {{ $a->guru->nip ?? '-' }}</small>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right roster-chevron"></i>
+            </div>
+        </div>
+        @endforeach
+    </div>
+@endif
 @endsection

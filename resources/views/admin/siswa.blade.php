@@ -3,31 +3,24 @@
 @section('title', 'Data Siswa')
 
 @section('content')
-<div class="page-header-actions">
+<div class="page-head">
     <div>
-        <h2 class="page-title">Data Siswa</h2>
-        <p class="page-subtitle">Kelola profil dan data siswa aktif dengan mudah.</p>
+        <h1>Data Siswa</h1>
+        <p>Klik salah satu siswa untuk melihat profil lengkap, kontak, dan kelas.</p>
     </div>
 
-    <div class="header-btn-group">
-        <a href="{{ route('export.preview', ['type' => 'siswa']) }}" class="btn btn-outline">
+    <div class="page-actions">
+        <a href="{{ route('export.preview', ['type' => 'siswa']) }}" class="btn btn-outline btn-sm">
             <i class="fas fa-file-csv"></i> Preview Export
         </a>
 
         @if(Auth::user()->role === 'admin')
-        <button id="toggleFormBtn" class="btn">
-            <i class="fas fa-user-plus"></i> Tambah Siswa Baru
+        <button type="button" id="toggleFormBtn" class="btn btn-sm">
+            <i class="fas fa-user-plus"></i> Tambah Siswa
         </button>
         @endif
     </div>
 </div>
-
-@if(request('cari'))
-<div class="alert-filter">
-    <span><i class="fas fa-filter" style="color: var(--primary);"></i> Hasil pencarian untuk: <strong>{{ request('cari') }}</strong></span>
-    <a href="{{ route('siswa') }}" class="btn btn-secondary btn-sm">Reset Pencarian</a>
-</div>
-@endif
 
 @if(Auth::user()->role === 'admin')
 <div id="formWrapper" class="form-panel" style="display: {{ ($edit || $errors->any()) ? 'block' : 'none' }};">
@@ -87,8 +80,8 @@
         </div>
 
         <div class="form-actions">
-            <button type="button" id="cancelBtn" class="btn btn-secondary">Batal</button>
-            <button type="submit" class="btn">
+            <button type="button" id="cancelBtn" class="btn btn-secondary btn-sm">Batal</button>
+            <button type="submit" class="btn btn-sm">
                 <i class="fas fa-save"></i> {{ $edit ? 'Perbarui Data' : 'Simpan Data' }}
             </button>
         </div>
@@ -96,45 +89,61 @@
 </div>
 @endif
 
-<div class="student-grid">
-    @forelse($siswa as $s)
-    <div class="student-card">
-        <img src="https://ui-avatars.com/api/?name={{ urlencode($s->nama) }}&background=dcfce7&color=15803d&bold=true" class="student-avatar" alt="{{ $s->nama }}">
-
-        <h3 class="student-name">{{ $s->nama }}</h3>
-        <span class="student-nisn">{{ $s->nisn }}</span>
-
-        <div class="student-details">
-            <span title="Kelas"><i class="fas fa-users" style="color: var(--primary);"></i> {{ $s->kelas->nama_kelas ?? 'N/A' }}</span>
-            <span title="Gender"><i class="fas fa-venus-mars" style="color: var(--primary);"></i> {{ $s->jenis_kelamin === 'Laki-laki' ? 'L' : 'P' }}</span>
-        </div>
-
-        <div class="student-details-sub">
-            <span title="No HP"><i class="fas fa-phone" style="color: var(--teal);"></i> {{ $s->no_hp ?? '-' }}</span>
-        </div>
-
-        @if(Auth::user()->role === 'admin')
-        <div class="card-actions">
-            <a href="{{ route('siswa', ['edit' => $s->id_siswa]) }}" class="btn-icon btn-edit" title="Edit">
-                <i class="fas fa-pen"></i>
-            </a>
-
-            <button type="button"
-                    data-url="{{ route('siswa.hapus', $s->id_siswa) }}"
-                    data-name="{{ $s->nama }}"
-                    onclick="openDeleteModal(this)"
-                    class="btn-icon btn-delete" title="Hapus">
-                <i class="fas fa-trash-can"></i>
-            </button>
-        </div>
+<div class="section-toolbar">
+    <span class="section-count"><i class="fas fa-user-graduate"></i> {{ $siswa->count() }} Siswa Terdaftar</span>
+    <form method="GET" action="{{ route('siswa') }}" class="toolbar">
+        <input type="text" name="cari" value="{{ request('cari') }}" placeholder="Cari nama atau NISN..." class="input-inline">
+        <button type="submit" class="btn btn-outline btn-sm">Cari</button>
+        @if(request('cari'))
+            <a href="{{ route('siswa') }}" class="btn btn-secondary btn-sm">Reset</a>
         @endif
-    </div>
-    @empty
-    <div class="empty-state">
+    </form>
+</div>
+
+@if($siswa->isEmpty())
+    <div class="empty-panel">
         <i class="fas fa-user-graduate"></i>
         <strong>Belum ada data siswa.</strong>
-        <p style="margin: 6px 0 0;">Data siswa akan muncul di sini setelah ditambahkan.</p>
+        <p style="margin: 4px 0 0;">Tambahkan siswa baru untuk mulai mengelola data induk siswa.</p>
     </div>
-    @endforelse
-</div>
+@else
+    <div class="roster-grid">
+        @foreach($siswa as $s)
+        @php
+            $parts = preg_split('/\s+/', trim((string) $s->nama)) ?: ['S'];
+            $ini = strtoupper(substr($parts[0], 0, 1) . (isset($parts[1]) ? substr($parts[1], 0, 1) : ''));
+            $detail = [
+                'initials' => $ini,
+                'title' => $s->nama,
+                'subtitle' => 'NISN: ' . $s->nisn,
+                'badge' => $s->kelas->nama_kelas ?? 'Tanpa Kelas',
+                'badgeClass' => 'pill-hadir',
+                'fields' => [
+                    ['label' => 'NISN', 'value' => $s->nisn, 'mono' => true],
+                    ['label' => 'Kelas', 'value' => $s->kelas->nama_kelas ?? '-'],
+                    ['label' => 'Jurusan', 'value' => $s->kelas->jurusan ?? '-'],
+                    ['label' => 'Jenis Kelamin', 'value' => $s->jenis_kelamin],
+                    ['label' => 'Tanggal Lahir', 'value' => $s->tanggal_lahir ? \Carbon\Carbon::parse($s->tanggal_lahir)->format('d M Y') : '-', 'mono' => true],
+                    ['label' => 'No. HP', 'value' => $s->no_hp ?? '-', 'mono' => true],
+                    ['label' => 'Alamat', 'value' => $s->alamat ?? '-'],
+                ],
+                'editUrl' => Auth::user()->role === 'admin' ? route('siswa', ['edit' => $s->id_siswa]) : null,
+                'deleteUrl' => Auth::user()->role === 'admin' ? route('siswa.hapus', $s->id_siswa) : null,
+                'deleteName' => $s->nama,
+            ];
+        @endphp
+        <div class="roster-item" role="button" tabindex="0" data-detail="{{ json_encode($detail) }}" onclick="openDetailModal(this)">
+            <span class="initials">{{ $ini }}</span>
+            <div class="roster-main">
+                <strong>{{ $s->nama }}</strong>
+                <small class="mono">{{ $s->nisn }} · {{ $s->jenis_kelamin === 'Laki-laki' ? 'L' : 'P' }}</small>
+            </div>
+            <div class="roster-right">
+                <span class="status-pill pill-neutral">{{ $s->kelas->nama_kelas ?? 'N/A' }}</span>
+                <i class="fas fa-chevron-right roster-chevron"></i>
+            </div>
+        </div>
+        @endforeach
+    </div>
+@endif
 @endsection

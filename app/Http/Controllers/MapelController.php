@@ -9,7 +9,7 @@ class MapelController extends Controller
 {
     public function index(Request $request)
     {
-        $mapelQuery = Mapel::query();
+        $mapelQuery = Mapel::withCount('mapelDiampu');
 
         if ($request->filled('cari')) {
             $cari = $request->cari;
